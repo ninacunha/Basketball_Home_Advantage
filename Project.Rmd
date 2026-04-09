@@ -1,0 +1,76 @@
+---
+title: "Project"
+author: "Nina Cunha"
+date: "2026-03-29"
+output: pdf_document
+---
+```{r}
+ #You can install using the pak package using the following code:
+if (!requireNamespace('pak', quietly = TRUE)){
+  install.packages('pak')
+}
+#pak::pak("sportsdataverse/hoopR")
+```
+
+```{r}
+#install.packages("tictoc")
+tictoc::tic()
+progressr::with_progress({
+  mbb_pbp <-  hoopR::load_mbb_pbp()
+})
+tictoc::toc()
+
+tictoc::tic()
+progressr::with_progress({
+  nba_pbp <- hoopR::load_nba_pbp()
+})
+tictoc::toc()
+```
+
+```{r}
+colnames(mbb_pbp)
+colnames(nba_pbp)
+```
+
+```{r, warning=FALSE}
+install.packages("dplyr")
+library(dplyr)
+```
+```{r}
+# Install hoopR (requires remotes or pak)
+install.packages("remotes")
+remotes::install_github("sportsdataverse/hoopR")
+
+# Then load it
+library(hoopR)
+
+# Now this should work
+load_nba_team_box(seasons = most_recent_nba_season())
+```
+
+```{r}
+games <- load_nba_team_box(seasons = most_recent_nba_season())
+```
+
+```{r}
+# See every column name
+colnames(games)
+
+# Get a full overview of the dataset structure
+#glimpse(games)
+
+# See first few rows
+#head(games)
+```
+
+```{r}
+games_college <- load_mbb_team_box(seasons = 2018:2023)
+colnames(games_college)
+glimpse(games_college)
+head(games_college)
+```
+
+```{r}
+plot()
+```
+

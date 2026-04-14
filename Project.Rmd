@@ -12,7 +12,7 @@ library(ggplot2)
 library(caret)
 library(skimr)
 library(caTools)
-
+library(car)
 ```
 
 ```{r}
@@ -59,6 +59,11 @@ mbb_stat_2025$turnover_points <- as.numeric(mbb_stat_2025$turnover_points)
 ```{r}
 summary(mbb_stat_2025)
 ```
+```{r}
+aggregate(mbb_stat_2025$team_winner, by=list(mbb_stat_2025$home_team), mean)
+```
+* **Teams playing at home won 67% of their games**
+
 
 ```{r}
 # remove variables that may cause multicollinearity issues
@@ -103,3 +108,5 @@ summary(model2)
 * The coefficients dont change over each year
 * shown that there are is a dependence between the hometeam and the winner of the game
 * what other stat tests should I analyze / how would suggest remove # of variables (cross validation?)
+* should I remove multicollinear columns before conducting any analysis like EDA or just before logistic regression
+* train test splits?

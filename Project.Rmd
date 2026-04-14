@@ -12,6 +12,7 @@ library(ggplot2)
 library(caret)
 library(skimr)
 library(caTools)
+
 ```
 
 ```{r}
@@ -26,6 +27,17 @@ variables <- c("team_home_away", "blocks", "field_goals_made", "free_throw_pct",
 mbb_stat_2026 <- mbb_2026[, variables]
 mbb_stat_2025 <- mbb_2025[, variables]
 ```
+```{r}
+dim(mbb_stat_2025)
+```
+```{r}
+str(mbb_stat_2025)
+```
+```{r}
+head(mbb_stat_2025)
+```
+
+
 
 ```{r, warning=FALSE}
 # convert non numeric variables to numbers
@@ -43,7 +55,9 @@ colnames(mbb_stat_2025)[colnames(mbb_stat_2025) == "team_home_away"] <- "home_te
 mbb_stat_2025$team_winner <- ifelse(mbb_stat_2025$team_winner == TRUE, 1, 0)
 mbb_stat_2025$points_in_paint <- as.numeric(mbb_stat_2025$points_in_paint)
 mbb_stat_2025$turnover_points <- as.numeric(mbb_stat_2025$turnover_points)
-str(mbb_stat_2026)
+```
+```{r}
+summary(mbb_stat_2025)
 ```
 
 ```{r}

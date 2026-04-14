@@ -4,73 +4,88 @@ author: "Nina Cunha"
 date: "2026-03-29"
 output: pdf_document
 ---
+
 ```{r}
- #You can install using the pak package using the following code:
-if (!requireNamespace('pak', quietly = TRUE)){
-  install.packages('pak')
-}
-#pak::pak("sportsdataverse/hoopR")
+library(hoopR)
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(skimr)
+library(caTools)
 ```
 
 ```{r}
-#install.packages("tictoc")
-tictoc::tic()
-progressr::with_progress({
-  mbb_pbp <-  hoopR::load_mbb_pbp()
-})
-tictoc::toc()
-
-tictoc::tic()
-progressr::with_progress({
-  nba_pbp <- hoopR::load_nba_pbp()
-})
-tictoc::toc()
+mbb_2026 <- load_mbb_team_box(seasons = c(2026))
+mbb_2025 <- load_mbb_team_box(seasons = c(2025))
 ```
-
 ```{r}
-colnames(mbb_pbp)
-colnames(nba_pbp)
+# Using directly relevant statistics to dataset
+variables <- c("team_home_away", "blocks", "field_goals_made", "free_throw_pct", "steals", "three_point_field_goals_made", "total_turnovers", "defensive_rebounds",
+                  "field_goals_attempted", "free_throws_made", "team_turnovers", "three_point_field_goals_attempted", "turnover_points", "team_winner", "fast_break_points",
+                  "flagrant_fouls","total_rebounds", "turnovers","assists", "field_goal_pct", "fouls", "points_in_paint")
+mbb_stat_2026 <- mbb_2026[, variables]
+mbb_stat_2025 <- mbb_2025[, variables]
 ```
 
 ```{r, warning=FALSE}
-install.packages("dplyr")
-library(dplyr)
-```
-```{r}
-# Install hoopR (requires remotes or pak)
-install.packages("remotes")
-remotes::install_github("sportsdataverse/hoopR")
+# convert non numeric variables to numbers
+mbb_stat_2026$fast_break_points <- as.numeric(mbb_stat_2026$fast_break_points)
+mbb_stat_2026$team_home_away <- ifelse(grepl("home", mbb_stat_2026$team_home_away), 1, 0)
+colnames(mbb_stat_2026)[colnames(mbb_stat_2026) == "team_home_away"] <- "home_team"
+mbb_stat_2026$team_winner <- ifelse(mbb_stat_2026$team_winner == TRUE, 1, 0)
+mbb_stat_2026$points_in_paint <- as.numeric(mbb_stat_2026$points_in_paint)
+mbb_stat_2026$turnover_points <- as.numeric(mbb_stat_2026$turnover_points)
 
-# Then load it
-library(hoopR)
-
-# Now this should work
-load_nba_team_box(seasons = most_recent_nba_season())
-```
-
-```{r}
-games <- load_nba_team_box(seasons = most_recent_nba_season())
-```
-
-```{r}
-# See every column name
-colnames(games)
-
-# Get a full overview of the dataset structure
-#glimpse(games)
-
-# See first few rows
-#head(games)
+# Same for 2025 season
+mbb_stat_2025$fast_break_points <- as.numeric(mbb_stat_2025$fast_break_points)
+mbb_stat_2025$team_home_away <- ifelse(grepl("home", mbb_stat_2025$team_home_away), 1, 0)
+colnames(mbb_stat_2025)[colnames(mbb_stat_2025) == "team_home_away"] <- "home_team"
+mbb_stat_2025$team_winner <- ifelse(mbb_stat_2025$team_winner == TRUE, 1, 0)
+mbb_stat_2025$points_in_paint <- as.numeric(mbb_stat_2025$points_in_paint)
+mbb_stat_2025$turnover_points <- as.numeric(mbb_stat_2025$turnover_points)
+str(mbb_stat_2026)
 ```
 
 ```{r}
-games_college <- load_mbb_team_box(seasons = 2018:2023)
-colnames(games_college)
-glimpse(games_college)
-head(games_college)
+# remove variables that may cause multicollinearity issues
+my_cor <- cor(mbb_stat_2026)
+findCorrelation(my_cor, cutoff=0.8, verbose=TRUE)
+
+# same for 2025 season
+my_cor_2 <- cor(mbb_stat_2025)
+findCorrelation(my_cor_2, cutoff=0.8, verbose=TRUE)
 ```
+```{r}
+# Dropping columns 17 and 18 from dataset to remove multicollinearity
+mbb_stat_2026 <- mbb_stat_2026[, -17]
+mbb_stat_2026 <- mbb_stat_2026[, -18]
+
+mbb_stat_2025 <- mbb_stat_2025[, -17]
+mbb_stat_2025 <- mbb_stat_2025[, -18]
+```
+
 
 ```{r}
-plot()
+# contigency table for home team vs winner
+mytable <- xtabs(~home_team + team_winner, data=mbb_stat_2026)
+mytable2 <- xtabs(~home_team + team_winner, data=mbb_stat_2025)
+mytable
 ```
+```{r}
+(test_2026 <- chisq.test(mytable))
+(test_2025 <- chisq.test(mytable2))
+```
+**It can be determined that being the home team and being the winner are dependant on eachother**
 
+
+```{r}
+# train model on all of the variables in data set 
+model <- glm(team_winner ~ ., family = "binomial", data=mbb_stat_2026)
+summary(model)
+
+model2 <- glm(team_winner ~ ., family = "binomial", data=mbb_stat_2025)
+summary(model2)
+```
+* The coefficients dont change over each year
+* shown that there are is a dependence between the hometeam and the winner of the game
+* what other stat tests should I analyze / how would suggest remove # of variables (cross validation?)
